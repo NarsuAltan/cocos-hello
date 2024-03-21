@@ -8,6 +8,7 @@
 /build/jsb-link/assets/
 /build/jsb-link/js backups (useful for debugging)/
 /build/jsb-link/src/
+/build/jsb-link/frameworks/runtime-src/proj.android-studio/app/release/
 
 #/////////////////////////////////////////////////////////////////////////////
 # npm files
@@ -51,3 +52,4 @@ Thumbs.db
 #//////////////////////////
 
 .vscode/
+
