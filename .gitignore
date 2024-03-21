@@ -5,7 +5,9 @@
 /library/
 /temp/
 /local/
-/build/
+/build/jsb-link/assets/
+/build/jsb-link/js backups (useful for debugging)/
+/build/jsb-link/src/
 
 #/////////////////////////////////////////////////////////////////////////////
 # npm files
