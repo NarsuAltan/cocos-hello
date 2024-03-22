@@ -24,22 +24,58 @@ THE SOFTWARE.
 ****************************************************************************/
 package org.cocos2dx.javascript;
 
-import org.cocos2dx.lib.Cocos2dxActivity;
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
-import android.os.Bundle;
-
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
+import com.yuyh.library.imgsel.ISNav;
+import com.yuyh.library.imgsel.common.ImageLoader;
+import com.yuyh.library.imgsel.config.ISListConfig;
+
+import org.cocos2d.demo.R;
+import org.cocos2dx.lib.Cocos2dxActivity;
+import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
+import org.cocos2dx.lib.Cocos2dxHelper;
+import org.cocos2dx.lib.Cocos2dxJavascriptJavaBridge;
+import org.cocos2dx.okhttp3.MediaType;
+import org.cocos2dx.okhttp3.MultipartBody;
+import org.cocos2dx.okhttp3.OkHttpClient;
+import org.cocos2dx.okhttp3.Request;
+import org.cocos2dx.okhttp3.RequestBody;
+import org.cocos2dx.okhttp3.Response;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+//Ctrl+Alt+O 组合键 清除
 public class AppActivity extends Cocos2dxActivity {
+
+    public static AppActivity mContext;
+    public static String TAG = "AppActivity";
+    public static  OkHttpClient client = new OkHttpClient();
+
+    private static final int REQUEST_LIST_CODE = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // DO OTHER INITIALIZATION BELOW
         SDKWrapper.getInstance().init(this);
+        mContext = (AppActivity) AppActivity.getContext();
 
+        ISNav.getInstance().init(new ImageLoader() {
+            @Override
+            public void displayImage(Context context, String path, ImageView imageView) {
+                Glide.with(context).load(path).into(imageView);
+            }
+        });
     }
 
     @Override
@@ -83,7 +119,29 @@ public class AppActivity extends Cocos2dxActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         SDKWrapper.getInstance().onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_LIST_CODE && resultCode == RESULT_OK && data != null) {
+            List<String> pathList = data.getStringArrayListExtra("result");
+
+            String path = "";
+            if (pathList.size() > 0)
+            {
+                path = pathList.get(0);
+                String finalPath = path;
+                Cocos2dxHelper.runOnGLThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Cocos2dxJavascriptJavaBridge.evalString("Bridge.pickImageCallback('" + finalPath + "');");
+                    }
+                });
+
+            }
+            Log.d(TAG,  "pickImage path:"+path);
+
+
+        }
     }
+
+
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -132,4 +190,61 @@ public class AppActivity extends Cocos2dxActivity {
         SDKWrapper.getInstance().onStart();
         super.onStart();
     }
+
+
+    public  static void pickImage(){
+        ISListConfig config = new ISListConfig.Builder()
+                // 是否多选
+                .multiSelect(false)
+                .btnText("Confirm")
+                // 确定按钮背景色
+                //.btnBgColor(Color.parseColor(""))
+                // 确定按钮文字颜色
+                .btnTextColor(Color.WHITE)
+                // 使用沉浸式状态栏
+                .statusBarColor(Color.parseColor("#3F51B5"))
+                // 设置状态栏字体风格黑色
+                .isDarkStatusStyle(true)
+                // 返回图标ResId
+                .backResId(R.mipmap.ic_launcher)
+                .title("Images")
+                .titleColor(Color.WHITE)
+                .titleBgColor(Color.parseColor("#3F51B5"))
+                .allImagesText("All Images")
+                .needCrop(true)
+                .cropSize(1, 1, 120, 120)
+                // 第一个是否显示相机
+                .needCamera(true)
+                // 最大选择图片数量
+                .maxNum(9)
+                .build();
+
+        ISNav.getInstance().toListActivity(mContext, config, REQUEST_LIST_CODE);
+    }
+
+
+    public static String uploadImage(String url, String imagePath, String param) throws IOException {
+
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("param",param)
+                .addFormDataPart("file", "filename",
+                        RequestBody.create(MediaType.parse("application/octet-stream"), new File(imagePath)))
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url) // 设置服务器地址
+                .post(requestBody)
+                .build();
+
+        Response response = client.newCall(request).execute();
+
+        if (response.isSuccessful()) {
+            return response.body().string();
+        } else {
+            return "{}";
+        }
+    }
+
+
 }

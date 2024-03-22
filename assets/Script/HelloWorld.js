@@ -1,3 +1,4 @@
+
 cc.Class({
     extends: cc.Component,
 
@@ -13,10 +14,16 @@ cc.Class({
     // use this for initialization
     onLoad: function () {
         this.label.string = this.text;
+        
     },
 
     // called every frame
     update: function (dt) {
 
+    },
+
+
+    uploadImage: function () {
+        Bridge.pickImage();
     },
 });

@@ -20,12 +20,14 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url "https://jitpack.io" }  //Make sure to add this in your project for uCrop - an internal library
 //        jcenter()
         flatDir {
             dirs 'libs'
         }
     }
 }
+
 
 task clean(type: Delete) {
     delete rootProject.buildDir
