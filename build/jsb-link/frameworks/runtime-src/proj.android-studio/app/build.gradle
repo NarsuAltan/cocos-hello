@@ -129,4 +129,6 @@ dependencies {
     implementation project(':libcocos2dx')
     implementation 'com.github.smuyyh:ImageSelector:3.0'
     implementation 'com.github.bumptech.glide:glide:3.7.0'
+    implementation 'com.google.android.gms:play-services-ads:23.0.0'
 }
+
