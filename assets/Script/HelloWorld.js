@@ -26,4 +26,8 @@ cc.Class({
     uploadImage: function () {
         Bridge.pickImage();
     },
+
+    showAd: function () {
+        Bridge.showAd();
+    },
 });

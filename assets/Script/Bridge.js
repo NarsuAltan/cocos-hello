@@ -30,6 +30,12 @@ var bridgeVar = cc.Class({
                 console.log(" uploadImage " , result)
             }
         },
+        showAd: function () {
+            if (cc.sys.os == cc.sys.OS_ANDROID) {
+                jsb.reflection.callStaticMethod(this._AND_CLASS_NAME, 'showAd', '()V');
+            }
+            
+        }
     }
 
 
