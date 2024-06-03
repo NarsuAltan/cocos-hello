@@ -20,5 +20,8 @@
     "width": 960,
     "height": 640
   },
-  "last-module-event-record-time": 1710986005402
+  "last-module-event-record-time": 1710986005402,
+  "migrate-history": [
+    "cloud-function"
+  ]
 }
