@@ -3902,8 +3902,8 @@ var cacheManager = require('./jsb-cache-manager');
       return;
     }
     if (this._nativeSkeleton) {
-      this._nativeSkeleton.stopSchedule();
       this._nativeSkeleton._comp = null;
+      this._nativeSkeleton.destroy();
       this._nativeSkeleton = null;
     }
     var nativeSkeleton = null;
@@ -4259,8 +4259,8 @@ var cacheManager = require('./jsb-cache-manager');
       this.animation = this.defaultAnimation;
     } else {
       if (this._nativeSkeleton) {
-        this._nativeSkeleton.stopSchedule();
         this._nativeSkeleton._comp = null;
+        this._nativeSkeleton.destroy();
         this._nativeSkeleton = null;
       }
     }
@@ -4269,8 +4269,8 @@ var cacheManager = require('./jsb-cache-manager');
   skeleton.onDestroy = function () {
     _onDestroy.call(this);
     if (this._nativeSkeleton) {
-      this._nativeSkeleton.stopSchedule();
       this._nativeSkeleton._comp = null;
+      this._nativeSkeleton.destroy();
       this._nativeSkeleton = null;
     }
     this._stateData = null;
@@ -4588,7 +4588,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
   var _worldMat = new mat4();
   var _topLeft = new vec3();
   var _bottomRight = new vec3();
-  var kWebViewTag = 0;
+  var kVideoTag = 0;
   var videoPlayers = [];
   var VideoEvent = {
     PLAYING: 0,
@@ -4681,6 +4681,14 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
       video.stop();
       video.setVisible(false);
       var cbs = this.__eventListeners;
+      video.removeEventListener("loadedmetadata", cbs.loadedmetadata);
+      video.removeEventListener("ended", cbs.ended);
+      video.removeEventListener("play", cbs.play);
+      video.removeEventListener("pause", cbs.pause);
+      video.removeEventListener("click", cbs.click);
+      video.removeEventListener("canplay", cbs.onCanPlay);
+      video.removeEventListener("canplaythrough", cbs.onCanPlay);
+      video.removeEventListener("suspend", cbs.onCanPlay);
       cbs.loadedmetadata = null;
       cbs.ended = null;
       cbs.play = null;
@@ -4952,7 +4960,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
       this._events = {};
       this._currentTime = 0;
       this._duration = 0;
-      this._videoIndex = kWebViewTag++;
+      this._videoIndex = kVideoTag++;
       this._matViewProj_temp = new mat4();
       window.oh.postMessage("createVideo", this._videoIndex);
       videoPlayers.push(this);

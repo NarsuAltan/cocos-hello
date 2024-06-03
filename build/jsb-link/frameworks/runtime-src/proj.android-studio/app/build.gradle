@@ -20,9 +20,9 @@ android {
                     targets 'cocos2djs'
                     arguments 'NDK_TOOLCHAIN_VERSION=clang'
                     
-                    def module_paths = [project.file("C:/ProgramData/cocos/editors/Creator/2.4.12/resources/cocos2d-x"),
-                                        project.file("C:/ProgramData/cocos/editors/Creator/2.4.12/resources/cocos2d-x/cocos"),
-                                        project.file("C:/ProgramData/cocos/editors/Creator/2.4.12/resources/cocos2d-x/external")]
+                    def module_paths = [project.file("D:/ProgramData/cocos/editors/Creator/2.4.13/resources/cocos2d-x"),
+                                        project.file("D:/ProgramData/cocos/editors/Creator/2.4.13/resources/cocos2d-x/cocos"),
+                                        project.file("D:/ProgramData/cocos/editors/Creator/2.4.13/resources/cocos2d-x/external")]
                     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                         arguments 'NDK_MODULE_PATH=' + module_paths.join(";")
                     }
@@ -125,7 +125,7 @@ android.applicationVariants.all { variant ->
 dependencies {
     implementation fileTree(dir: '../libs', include: ['*.jar','*.aar'])
     implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
-    implementation fileTree(dir: "C:/ProgramData/cocos/editors/Creator/2.4.12/resources/cocos2d-x/cocos/platform/android/java/libs", include: ['*.jar'])
+    implementation fileTree(dir: "D:/ProgramData/cocos/editors/Creator/2.4.13/resources/cocos2d-x/cocos/platform/android/java/libs", include: ['*.jar'])
     implementation project(':libcocos2dx')
     implementation 'com.github.smuyyh:ImageSelector:3.0'
     implementation 'com.github.bumptech.glide:glide:3.7.0'
