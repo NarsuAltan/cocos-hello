@@ -31,12 +31,18 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 
+import com.adjust.sdk.Adjust;
+import com.adjust.sdk.AdjustConfig;
+import com.adjust.sdk.LogLevel;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
@@ -49,6 +55,9 @@ import com.google.android.gms.ads.initialization.OnInitializationCompleteListene
 import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
+import com.hoho.android.usbserial.driver.UsbSerialDriver;
+import com.hoho.android.usbserial.driver.UsbSerialPort;
+import com.hoho.android.usbserial.driver.UsbSerialProber;
 import com.yuyh.library.imgsel.ISNav;
 import com.yuyh.library.imgsel.common.ImageLoader;
 import com.yuyh.library.imgsel.config.ISListConfig;
@@ -67,6 +76,7 @@ import org.cocos2dx.okhttp3.Response;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 //Ctrl+Alt+O 组合键 清除
@@ -78,6 +88,19 @@ public class AppActivity extends Cocos2dxActivity {
     private RewardedAd rewardedAd;
 
     private static final int REQUEST_LIST_CODE = 0;
+    static class ListItem {
+        UsbDevice device;
+        int port;
+        UsbSerialDriver driver;
+
+        ListItem(UsbDevice device, int port, UsbSerialDriver driver) {
+            this.device = device;
+            this.port = port;
+            this.driver = driver;
+        }
+    }
+
+    private final ArrayList<ListItem> listItems = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +124,12 @@ public class AppActivity extends Cocos2dxActivity {
             }
         });
 
+        String appToken = "";
+        String environment = AdjustConfig.ENVIRONMENT_SANDBOX;
+        AdjustConfig config = new AdjustConfig(this, appToken, environment);
+        Adjust.onCreate(config);
+        config.setLogLevel(LogLevel.VERBOSE);
+
     }
 
     @Override
@@ -117,6 +146,9 @@ public class AppActivity extends Cocos2dxActivity {
     protected void onResume() {
         super.onResume();
         SDKWrapper.getInstance().onResume();
+        postLog("onResume");
+        Adjust.onResume();
+//        refresh();
 
     }
 
@@ -124,6 +156,7 @@ public class AppActivity extends Cocos2dxActivity {
     protected void onPause() {
         super.onPause();
         SDKWrapper.getInstance().onPause();
+        Adjust.onPause();
 
     }
 
@@ -214,6 +247,38 @@ public class AppActivity extends Cocos2dxActivity {
     protected void onStart() {
         SDKWrapper.getInstance().onStart();
         super.onStart();
+    }
+
+    public void  postLog(String str){
+        Cocos2dxHelper.runOnGLThread(new Runnable() {
+            @Override
+            public void run() {
+                Cocos2dxJavascriptJavaBridge.evalString("window.log2view('" + str + "');");
+            }
+        });
+    }
+
+    void refresh() {
+        UsbManager usbManager = (UsbManager)getSystemService(Context.USB_SERVICE);
+        UsbSerialProber usbDefaultProber = UsbSerialProber.getDefaultProber();
+        UsbSerialProber usbCustomProber = CustomProber.getCustomProber();
+        listItems.clear();
+        for(UsbDevice device : usbManager.getDeviceList().values()) {
+            UsbSerialDriver driver = usbDefaultProber.probeDevice(device);
+            if(driver == null) {
+                driver = usbCustomProber.probeDevice(device);
+            }
+            if(driver != null) {
+                for(int port = 0; port < driver.getPorts().size(); port++)
+                {
+                    listItems.add(new ListItem(device, port, driver));
+                    postLog("device "+device);
+                }
+            } else {
+                listItems.add(new ListItem(device, 0, null));
+                postLog("device is null");
+            }
+        }
     }
 
     void loadAd() {
@@ -348,6 +413,45 @@ public class AppActivity extends Cocos2dxActivity {
             @Override
             public void run() {
                 appActivity.showAdImpl();
+            }
+        });
+
+    }
+
+
+    public static void usbDevice() {
+        AppActivity appActivity = (AppActivity) (SDKWrapper.getInstance().getContext());
+        appActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Find all available drivers from attached devices.
+                UsbManager manager = (UsbManager) appActivity.getSystemService(Context.USB_SERVICE);
+                List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
+                if (availableDrivers.isEmpty()) {
+                    appActivity.postLog("isEmpty");
+                    return;
+                }
+
+                // Open a connection to the first available driver.
+                UsbSerialDriver driver = availableDrivers.get(0);
+                appActivity.postLog("driver "+ driver.getDevice().getDeviceName());
+                UsbDeviceConnection connection = manager.openDevice(driver.getDevice());
+                if (connection == null) {
+                    appActivity.postLog("connection null ");
+                    // add UsbManager.requestPermission(driver.getDevice(), ..) handling here
+                    return;
+                }
+
+                UsbSerialPort port = driver.getPorts().get(0); // Most devices have just one port (port 0)
+
+                try {
+                    port.open(connection);
+                    port.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+
             }
         });
 
