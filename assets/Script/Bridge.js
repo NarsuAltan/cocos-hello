@@ -34,7 +34,12 @@ var bridgeVar = cc.Class({
             if (cc.sys.os == cc.sys.OS_ANDROID) {
                 jsb.reflection.callStaticMethod(this._AND_CLASS_NAME, 'showAd', '()V');
             }
-            
+        },
+
+        send: function (msg) {
+            if (cc.sys.os == cc.sys.OS_ANDROID) {
+                jsb.reflection.callStaticMethod(this._AND_CLASS_NAME, 'send', '(Ljava/lang/String;)V', msg);
+            }
         }
     }
 

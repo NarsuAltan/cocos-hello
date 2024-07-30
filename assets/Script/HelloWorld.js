@@ -8,13 +8,17 @@ cc.Class({
             type: cc.Label
         },
         // defaults, set visually when attaching this script to the Canvas
-        text: 'Hello, World!'
+        text: 'Hello, World!',
+
+        editbox: {
+            default: null,
+            type: cc.EditBox
+        }
     },
 
     // use this for initialization
     onLoad: function () {
-        this.label.string = this.text;
-        
+
     },
 
     // called every frame
@@ -30,4 +34,10 @@ cc.Class({
     showAd: function () {
         Bridge.showAd();
     },
+            
+    send: function () {
+        let txt = this.editbox.string
+        Bridge.send(txt)
+        this.editbox.string = ""
+    }
 });
